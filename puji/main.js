@@ -101,7 +101,7 @@ function doRequest(form) {
             params[this.name] = this.value;
         }
     });
-console.log("PARAMS",params);
+
     server.sendAjaxRequest(method, params, successMethod, errorMethod);
 }
 

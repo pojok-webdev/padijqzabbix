@@ -1,0 +1,120 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>jQuery plugin for Zabbix API demo</title>
+<link rel="stylesheet" type="text/css" href="main.css" media="screen" />
+<script type="text/javascript" charset="utf-8" src="../jqzabbix/jquery-2.1.1.min.js"></script>
+<script type="text/javascript" charset="utf-8" src="../jqzabbix/jqzabbix.js"></script>
+<!--<script type="text/javascript" charset="utf-8" src="main.js"></script>-->
+<body>
+
+<!-- header -->
+<div id="header"><h1>jQuery plugin for Zabbix API demo</h1></div>
+
+<!-- contens -->
+
+<div id="result"></div>
+
+<!-- footer -->
+<div id="footer"><address>Copyright &copy 2011 Kodai Terashima. <a href="http://www.mozaby.com">Mozaby</a> project.</address></div>
+<script type="text/javascript">
+	(function($){
+		var server = new $.jqzabbix({
+			url: 'http://202.6.233.15/zabbix/api_jsonrpc.php',  // URL of Zabbix API
+			username: 'puji',   // Zabbix login user name
+			password: 'pujicute2016',  // Zabbix login password
+			basicauth: false,    // If you use basic authentication, set true for this option
+			busername: '',       // User name for basic authentication
+			bpassword: '',       // Password for basic authentication
+			timeout: 5000,       // Request timeout (milli second)
+			limit: 1000,         // Max data number for one request
+		})
+		
+		var vsuccess = function(verso) { 
+				console.log('success!'+verso); 
+			}
+		var verror = function() { alert('error!'); }
+		var lsuccess = function(verso) { 
+				console.log('success!'+verso); 
+				server.sendAjaxRequest('dservice.get', {}, rsuccess, rerror)
+			}
+		var lerror = function() { alert('error!'); }
+
+		myversion = server.getApiVersion(null,vsuccess,verror);
+		server.userLogin(null,lsuccess,lerror);
+		
+		/*
+		
+		
+    method: Zabbix API method listed on Zabbix API document
+    params: Zabbix API method parameters
+    success: Success callback function
+    error: Error callback function
+	server.sendAjaxRequest('get', params, success, error)
+		
+		
+		*/
+		var rsuccess = function(response, status){
+
+			// response is string
+			if (typeof(response.result) === 'string' || typeof(response.result) === 'boolean') {
+				$('#result').html('<p>'+ response.result +'</p>')
+			}
+
+			// response is object 
+			else if (typeof(response.result) === 'object') {
+
+				num = 0; // for table header
+				var header = '';
+				var row = '';
+				var contents = '';
+
+				// each data
+				$.each(response.result, function() {
+
+					row = '';
+
+					$.each(this, function(key, value) {
+
+						if (num === 0) { header += '<th>' + key + '</th>'; };
+
+						if (typeof value === 'object') {
+							row += '<td>' + JSON.stringify(value) + '</td>'
+							console.log("VLAUE",value);
+						}
+						else {
+							row += '<td>' + value + '</td>';
+							console.log("VLAUE",value);
+						}
+					});
+
+					if (num === 0) {
+						header = '<tr>' + header + '</tr>';
+					}
+
+					contents += '<tr>' + row + '</tr>'
+					
+					num++;
+				});
+
+				if (contents) {
+					$('#result').html('<p>Result: '+ response.result.length + '</p><table>' + header + contents + '</table>');
+				}
+				else {
+					$('#result').html('No result')
+				}
+			}
+		}
+		var rerror = function(){
+			var errormsg = '';
+			$.each(server.isError(), function(key, value) {
+				errormsg += '<li>' + key + ' : ' + value + '</li>';
+			});
+			console.log(errormsg);
+		}
+		//server.sendAjaxRequest('graph.get', {}, rsuccess, rerror)
+	}(jQuery))
+</script>
+</body>
+</html>
